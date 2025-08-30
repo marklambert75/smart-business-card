@@ -16,6 +16,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Quick env presence check (safe: only booleans)
+console.log("[env check]", Object.fromEntries(Object.entries(firebaseConfig).map(([k,v]) => [k, !!v])));
+
+
 /* --- Init app and services --- */
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
