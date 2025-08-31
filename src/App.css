@@ -1,42 +1,182 @@
-#root {
-  max-width: 1280px;
+/* === Theme Tokens (defaults; overridden at runtime from Firestore) === */
+:root {
+  /* Brand tokens */
+  --color-primary: #0f766e;
+  --color-secondary: #f59e0b;
+  --color-background: #ffffff;
+  --color-surface: #f7f7f7;
+  --color-text: #111111;
+  --color-accent: #dc2626;
+
+  /* Typography */
+  --font-family: system-ui, -apple-system, sans-serif;
+  --heading-scale: 1.15;
+
+  /* Shape */
+  --rounded: 12px; /* e.g., 8px, 12px, 24px */
+  --elevation: 1;  /* 0–4 recommended */
+}
+
+/* === Layout Container === */
+.container {
+  max-width: 640px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+/* === Header === */
+header {
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  max-width: 120px;
+  margin: 0 auto 1rem auto;
+  display: block;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+h1 {
+  font-size: calc(1.8rem * var(--heading-scale));
+  margin: 0.5rem 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.tagline {
+  font-size: 1rem;
+  color: var(--color-text);
+  opacity: 0.75;
 }
 
-.card {
-  padding: 2em;
+/* === Contact Section === */
+.contact {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border-radius: var(--rounded);
+  /* Elevation uses px units derived from numeric token */
+  box-shadow:
+    0 calc(var(--elevation) * 1px) calc(var(--elevation) * 3px) rgba(0,0,0,0.10);
 }
 
-.read-the-docs {
-  color: #888;
+.contact p {
+  margin: 0.25rem 0;
 }
+
+/* === Services Section === */
+.services h2 {
+  font-size: calc(1.4rem * var(--heading-scale));
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.services ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.service {
+  border: 1px solid #e5e5e5;
+  border-radius: var(--rounded);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--color-surface);
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.service:hover {
+  box-shadow:
+    0 calc((var(--elevation) + 1) * 1px) calc((var(--elevation) + 1) * 4px) rgba(0,0,0,0.14);
+  transform: translateY(-1px);
+}
+
+.service h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+/* --- Chat basics --- */
+.chat { display: grid; gap: 12px; }
+.chat-feed {
+  display: grid;
+  gap: 8px;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 8px;
+  background: var(--color-surface, #f6f6f6);
+  border-radius: 12px;
+}
+.bubble {
+  padding: 10px 12px;
+  border-radius: 12px;
+  line-height: 1.4;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+.bubble.user {
+  justify-self: end;
+  background: #eaf9ea; /* subtle green for user */
+}
+.bubble.bot {
+  justify-self: start;
+  background: #f7f7f7; /* soft gray for bot */
+}
+.chat-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* --- Input styling (real text box) --- */
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cfd8cf;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 16px;
+  color: #111; 
+}
+.input:focus {
+  outline: none;
+  border-color: #86d38a;        /* light green focus */
+  box-shadow: 0 0 0 3px rgba(134, 211, 138, 0.25);
+}
+
+/* Input row spacing (now above the buttons in JSX) */
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 10px;
+}
+
+/* --- Buttons (light green theme) --- */
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #d9f7d9;    /* light green */
+  color: #0a3d0a;         /* dark green text */
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.02s ease;
+}
+.btn:hover { background: #b9eeb9; }  /* slightly darker on hover */
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn.secondary {
+  background: #eefbe6;   /* even lighter green */
+  color: #225522;
+}
+
+.linklike {
+  background: none;
+  border: none;
+  color: var(--color-primary, #0b69ff);
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.muted { color: #666; font-size: 0.9em; }
