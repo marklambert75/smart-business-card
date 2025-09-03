@@ -32,3 +32,10 @@ dist-ssr
 # Never commit service accounts or keys
 serviceAccount*.json
 *.pem
+
+# Vercel local project metadata (not secret, but rarely useful to commit)
+.vercel/
+
+# Firebase CLI logs (if you ever run it)
+firebase-debug.log
+.vercel

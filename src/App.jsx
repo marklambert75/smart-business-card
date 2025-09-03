@@ -4,6 +4,10 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
+// === Streaming hook ===
+import { useChatStream } from "./hooks/useChatStream";
+
+
 // --- Firestore ---
 import { doc, onSnapshot, collection, query, orderBy } from "firebase/firestore";
 import { db, storage, devAnonSignIn } from "./lib/firebase";
@@ -40,6 +44,10 @@ export default function App() {
     // seed with a system-style greeting once biz loads
   ]);
   const [input, setInput] = useState("");
+
+  // === Streaming chat (AI) ===
+  const { send, abort, isLoading, text: streamText } = useChatStream();
+
 
   // === Apply theme variables when business data loads ===
   useEffect(() => {
@@ -165,27 +173,48 @@ if (data) {
     }
   }
 
+  // === Send to /api/chat (streaming) ===
   function onSend(e) {
     e.preventDefault();
-    const text = input.trim();
-    if (!text) return;
-    setMessages((m) => [...m, { role: "user", text }]);
+    const userText = input.trim();
+    if (!userText) return;
 
-    // Stubbed bot behavior (no OpenAI yet):
-    // Offer context-aware replies for booking/quote keywords, else generic.
-    const t = text.toLowerCase();
-    let reply =
-      "Thanks! I’m a demo chat right now. I can help you book via the button below, or collect details for a free quote.";
-    if (t.includes("book") || t.includes("appointment")) {
-      reply = biz?.calendlyUrl
-        ? "You can book an appointment using the button below."
-        : "I don't see a booking link yet, but I can still collect your details.";
-    } else if (t.includes("quote")) {
-      reply =
-        "Great—hit “Get a Quote” below and fill the quick form. I’ll send it to the owner.";
-    }
-    setMessages((m) => [...m, { role: "assistant", text: reply }]);
+    // Append the user message to UI immediately
+    setMessages((m) => [...m, { role: "user", text: userText }]);
     setInput("");
+
+    const bizId = getBizIdFromUrl();
+
+    // Transform our UI messages ({role,text}) -> API format ({role,content})
+    const history = messages.map((m) => ({ role: m.role, content: m.text }));
+    const payload = [...history, { role: "user", content: userText }];
+
+    // Stream from the server; streamText will update live via the hook
+    send({
+      bizId,
+      messages: payload,
+      onChunk: () => {
+        // no-op: UI consumes streamText directly
+      },
+      onDone: () => {
+        // When stream ends, commit the assistant message (from streamText) to history
+        const finalText = streamText; // latest value from hook
+        if (finalText && finalText.trim().length) {
+          setMessages((m) => [...m, { role: "assistant", text: finalText }]);
+        }
+      },
+      onError: (err) => {
+        console.error(err);
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            text:
+              "Sorry—there was a problem reaching the chat service. Please try again in a moment.",
+          },
+        ]);
+      },
+    });
   }
 
   // === Simple Quote form (mailto: fallback; no writes yet) ===
@@ -223,12 +252,10 @@ if (data) {
           {showChat ? (
             <section className="chat">
               {/* Quick intro with services list */}
+
 <div className="chat-feed">
   {messages.map((m, i) => {
-    if (
-      i === 0 && // after the first greeting bubble
-      services.length > 0
-    ) {
+    if (i === 0 && services.length > 0) {
       return (
         <div key={i}>
           <div className={`bubble ${m.role === "user" ? "user" : "bot"}`}>
@@ -245,14 +272,18 @@ if (data) {
       );
     }
     return (
-      <div
-        key={i}
-        className={`bubble ${m.role === "user" ? "user" : "bot"}`}
-      >
+      <div key={i} className={`bubble ${m.role === "user" ? "user" : "bot"}`}>
         {m.text}
       </div>
     );
   })}
+
+  {/* Live streaming assistant bubble (appears while isLoading or when streamText has content) */}
+  {(isLoading || (streamText && streamText.length > 0)) && (
+    <div className="bubble bot">
+      {streamText || "…"}
+    </div>
+  )}
 </div>
 
 {/* Chat input (now above the buttons) */}
@@ -263,8 +294,15 @@ if (data) {
     placeholder="Ask about pricing, availability, or a service…"
     value={input}
     onChange={(e) => setInput(e.target.value)}
+    disabled={isLoading}
   />
-  <button className="btn" type="submit">Send</button>
+  {!isLoading ? (
+    <button className="btn" type="submit">Send</button>
+  ) : (
+    <button className="btn secondary" type="button" onClick={abort}>
+      Stop
+    </button>
+  )}
 </form>
 
 {/* Quick actions */}
